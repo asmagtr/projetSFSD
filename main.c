@@ -16,19 +16,14 @@ typedef struct bloc{
 }bloc;
 
 //le type fichier
-//d'abord on definit l'entete de fichier
-typedef struct entete{
-    int nbrBlocs;
-}entete;
-// puis on definit le fichier
 typedef struct FICHIER{
-    entete tete;
+    int nbrBloc; /// l'entete de fichier oú on vas garder le nuombres de blocs utilisés
     bloc blocs[max];
 }FICHIER;
 
 
 int main(){
 
-
+    
     return 0;
 }

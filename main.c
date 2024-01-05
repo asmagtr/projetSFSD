@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #define max 10
-/// on declare les types 
+///***************************on declare les types**********************/
 /// notre enregistrement represente un etudiant
 typedef struct enregistremnt{
+    bool supprimer; // pour montrer si l'element est supprimé logiquement 
     char nom[20]; // le nom sera la clé
     char prenom[20];
     int matricule;
@@ -19,16 +21,19 @@ typedef struct bloc{
 //d'abord on definit l'entete de fichier
 typedef struct entete{
     int nbrBlocs;
+    int nbrEl; //nombre d'element (enregistrement)
 }entete;
 // puis on definit le fichier
-typedef struct FICHIER{
+typedef struct TOF{
     entete tete;
-    bloc blocs[max];
-}FICHIER;
+    FILE *f
+}TOF;
+///****************les algorithmes de manipulation des fichiers*********************//////
+
 
 
 int main(){
 
-
+    
     return 0;
 }

@@ -16,6 +16,7 @@ typedef struct bloc{
     int nb;
     enregistrement tab[max];
 }bloc;
+typedef struct bloc buffer;// le buffer est de meme type que le bloc
 
 //le type fichier
 //d'abord on definit l'entete de fichier

@@ -45,6 +45,22 @@ void AFF_ENTETE(TOF *t,int i,int val)
     if (i==2) t->tete.nbrEl=val;
 }
 
+void LireDir (TOF *t,int i,buffer *buf)
+{
+  if (i<=ENTETE(t,1))
+
+      fseek(t->f,sizeof(entete)+(i-1)*sizeof(bloc),0);
+      fread(buf,sizeof(bloc),1,t->f);
+      
+  }
+
+
+void EcrireDir (TOF *t,int i,buffer buf)
+{
+      fseek(t->f,sizeof(entete)+(i-1)*sizeof(bloc),0);
+      fwrite(&buf,sizeof(bloc),1,t->f);
+     
+}
 
 int main(){
     

@@ -16,14 +16,14 @@ typedef struct bloc{
 }bloc;
 
 //le type fichier
-typedef struct FICHIER{
+typedef struct FICHIER {
     int nbrBloc; /// l'entete de fichier oú on vas garder le nuombres de blocs utilisés
     bloc blocs[max];
 }FICHIER;
-
+//
 
 int main(){
-
+    printf("hello wolrd!");
     
     return 0;
 }

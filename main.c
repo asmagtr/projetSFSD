@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #define max 10
 ///***************************on declare les types**********************/
 /// notre enregistrement represente un etudiant
@@ -10,7 +11,6 @@ typedef struct enregistremnt{
     char prenom[20];
     int matricule;
 }enregistrement;
-
 /// le type de bloc
 typedef struct bloc{
     int nb;
@@ -28,8 +28,96 @@ typedef struct entete{
 // puis on definit le fichier
 typedef struct TOF{
     entete tete;
-    FILE *f
+    FILE *f;
 }TOF;
+
+
+//les fonctions 
+
+//fonction pour recuperer les donnees de bloc d'entete
+int ENTETE(TOF *t,int i)
+{
+    if (i==1) return t->tete.nbrBlocs;
+    if (i==2) return t->tete.nbrEl;
+    if (i==3) return t->tete.nbrElSupp;
+    
+}
+
+//fonction pour affecter des valeurs a l'entete
+void AFF_ENTETE(TOF *t,int i,int val)
+{
+    if (i==1) t->tete.nbrBlocs=val;
+    if (i==2) t->tete.nbrEl=val;
+    if (i==3) t->tete.nbrElSupp=val;
+}
+
+void LireDir (TOF *t,int i,buffer *buf)
+{
+  if (i<=ENTETE(t,1))
+    {
+      fseek(t->f,sizeof(entete)+(i-1)*sizeof(bloc),0);
+      fread(buf,sizeof(bloc),1,t->f);
+      
+    }
+}
+
+void EcrireDir (TOF *t,int i,buffer buf)
+{
+      fseek(t->f,sizeof(entete)+(i-1)*sizeof(bloc),0);
+      fwrite(&buf,sizeof(bloc),1,t->f);
+     
+}
+
+void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
+    bloc Buf;
+    int deb = 1, fin = ENTETE(t, 1), inf, sup, Arret = 0;
+    *Trouv = false;
+    *j = 0;
+
+    while ((!(*Trouv)) && (deb <= fin) && (!Arret)) {
+        *i = (deb + fin) / 2;
+        LireDir(t, *i, &Buf);
+
+        if (Buf.nb > 0) {
+            if ((strcmp(cle, Buf.tab[0].nom) >= 0) && (strcmp(cle, Buf.tab[Buf.nb - 1].nom) <= 0)) {
+                inf = 0;
+                sup = Buf.nb - 1;
+
+                while ((!(*Trouv)) && (inf <= sup)) {
+                    *j = (inf + sup) / 2;
+                    int compareResult = strcmp(cle, Buf.tab[*j].nom);
+
+                    if (compareResult == 0) {
+                        *Trouv = true;
+                    } else {
+                        if (compareResult < 0) {
+                            sup = *j - 1;
+                        } else {
+                            inf = *j + 1;
+                        }
+                    }
+                }
+
+                if (!(*Trouv)) {
+                    *j = inf;
+                    Arret = true;
+                }
+            } else {
+                if (strcmp(cle, Buf.tab[0].nom) < 0) {
+                    fin = *i - 1;
+                } else {
+                    deb = *i + 1;
+                }
+            }
+        } else {
+            Arret = true;
+        }
+    }
+
+    if (deb > fin) {
+        *i = deb;
+    }
+
 ///****************les algorithmes de manipulation des fichiers*********************//////
 /// Ouvrir le fichier logique et l’associer au fichier physique en précisant si le fichier est nouveau ('N') ou ancien ('A').
 TOF* ouvrir(char fileName[30],char mode){
@@ -51,6 +139,7 @@ void fermer(TOF *F){
     fwrite(&(F->tete),sizeof(F->tete),1,F->f);// on update l'entete dans le fichier logique (pour savoir avec quoi nous travaillons plus tard)
     fclose(F->f);
     F=NULL;
+
 }
 
 // une fonction qui affiche les données d'un etudiant 
@@ -61,6 +150,5 @@ void afficherEtudiant(enregistrement e){
 
 int main(){
 
-    
     return 0;
 }

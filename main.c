@@ -31,6 +31,7 @@ typedef struct TOF{
     FILE *f;
 }TOF;
 
+
 //les fonctions 
 
 //fonction pour recuperer les donnees de bloc d'entete
@@ -116,8 +117,35 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
     if (deb > fin) {
         *i = deb;
     }
+
+///****************les algorithmes de manipulation des fichiers*********************//////
+/// Ouvrir le fichier logique et l’associer au fichier physique en précisant si le fichier est nouveau ('N') ou ancien ('A').
+TOF* ouvrir(char fileName[30],char mode){
+    TOF* fileTOF=malloc(sizeof(TOF));
+        if( mode=='a'|| mode=='A'){
+            fileTOF->f=fopen(fileName,"rb+");
+            fread(&(fileTOF->tete),sizeof(entete),1,fileTOF->f);
+        }
+        else{
+            fileTOF->f=fopen(fileName,"wb+");
+            (fileTOF->tete).nbrBlocs=(fileTOF->tete).nbrEl=(fileTOF->tete).nbrElSupp=0;/// on initialise le nbr de blocs et d'enregistrement effacées et non effacé á 0 
+            fwrite(&(fileTOF->tete),sizeof(entete),1,fileTOF->f); /// on copie l'entete dans notre fichier
+        }
+    return fileTOF;
+}
+// Fermer le fichier.
+void fermer(TOF *F){
+    rewind(F->f);// on se met dans le debut du fichier
+    fwrite(&(F->tete),sizeof(F->tete),1,F->f);// on update l'entete dans le fichier logique (pour savoir avec quoi nous travaillons plus tard)
+    fclose(F->f);
+    F=NULL;
+
 }
 
+// une fonction qui affiche les données d'un etudiant 
+void afficherEtudiant(enregistrement e){
+    printf("le nom :%s / le prenom : %s / le matricule : %d \n",e.nom,e.prenom,e.matricule);
+}
 
 
 int main(){

@@ -30,6 +30,11 @@ typedef struct TOF{
     entete tete;
     FILE *f;
 }TOF;
+int Alloc_Block(TOF *5)
+{
+    AFF_ENTETE(S,1,ENTETE(S,1)+1);
+    return ENTETE(S,1);
+}
 
 
 
@@ -118,6 +123,29 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
 
     if (deb > fin) {
         *i = deb;
+    }
+    void supprimer(TOF *S,cle key)
+    {
+       int i,j,Trouv;
+       bloc Buf;
+       Recherche_DEC_TOF(S,key,&i,&j,&Trouv);
+       if (Trouv==1)
+       {
+        LireDir(S,i,&Buf);
+        if (Buf.NB!=1)
+          {
+            while(j<Buf.NB)
+            {
+                Buf.tab[j]=Buf.tab[j+1];
+                j++;
+            }
+          }
+          Buf.NB--;
+          EcrireDir(S,i,Buf);
+          AFF_ENTETE(S,i,ENTETE(S,2)-1);
+
+       }
+
     }
 
 ///****************les algorithmes de manipulation des fichiers*********************//////

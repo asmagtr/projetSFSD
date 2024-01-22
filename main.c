@@ -141,7 +141,6 @@ void fermer(TOF *F){
     F=NULL;
 
 }
-
 // une fonction qui affiche les données d'un etudiant 
 void afficherEtudiant(enregistrement e){
     printf("le nom :%s / le prenom : %s / le matricule : %d \n",e.nom,e.prenom,e.matricule);
@@ -149,6 +148,6 @@ void afficherEtudiant(enregistrement e){
 
 
 int main(){
-
+    printf("hello world");
     return 0;
 }

@@ -30,6 +30,13 @@ typedef struct TOF{
     entete tete;
     FILE *f;
 }TOF;
+int Alloc_Block(TOF *S)
+{
+    AFF_ENTETE(S,1,ENTETE(S,1)+1);
+    return ENTETE(S,1);
+}
+
+
 
 
 //les fonctions 
@@ -162,8 +169,8 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) { // i le
         }
     }
 
-    if (deb > fin) { // si le bloc de debut est plus grand que bloc de fin apres sortir de la boucle while
-        *i = deb; // l'element doit se placer dans le bloc du debut 
+    if (deb > fin) {
+        *i = deb;
     }
     if (Trouv && k==1){ // si l'element est trouvé mais supprimé logiquement donc il n'est pas dans le fichier trouv est faux
         Trouv=false; // on a ajouté k pour sauvegardé l'indice d'element 
@@ -250,6 +257,28 @@ TOF *creerFichier(char *nomFile,int nbEnregistrements){
     }
     return fichier;
 }
+void supprimer(TOF *s,enregistrement key)
+    {
+       int i,j,Trouv;
+       bloc Buf;
+       Recherche_DEC_TOF(S,key,&i,&j,&Trouv);
+       if (Trouv==1)
+       {
+        LireDir(S,i,&Buf);
+        if (Buf.nb!=1)
+          {
+            while(j<Buf.nb)
+            {
+            
+                Buf.tab[j]=Buf.tab[j+1];
+                j++;
+            }
+          }
+          Buf.nb--;
+          EcrireDir(S,i,Buf);
+          AFF_ENTETE(S,i,ENTETE(S,2)-1);
+
+       }
 
 int main(){
     printf("hello world");

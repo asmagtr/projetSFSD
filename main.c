@@ -125,7 +125,8 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
         *i = deb;
     }
 }
-    void supprimer(TOF *S,cle key)
+
+void supprimer(TOF *s,enregistrement key)
     {
        int i,j,Trouv;
        bloc Buf;
@@ -137,6 +138,7 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
           {
             while(j<Buf.nb)
             {
+            
                 Buf.tab[j]=Buf.tab[j+1];
                 j++;
             }
@@ -146,8 +148,6 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
           AFF_ENTETE(S,i,ENTETE(S,2)-1);
 
        }
-
-    }
 
 ///****************les algorithmes de manipulation des fichiers*********************//////
 /// Ouvrir le fichier logique et l’associer au fichier physique en précisant si le fichier est nouveau ('N') ou ancien ('A').

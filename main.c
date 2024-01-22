@@ -124,6 +124,7 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
     if (deb > fin) {
         *i = deb;
     }
+}
     void supprimer(TOF *S,cle key)
     {
        int i,j,Trouv;
@@ -132,15 +133,15 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
        if (Trouv==1)
        {
         LireDir(S,i,&Buf);
-        if (Buf.NB!=1)
+        if (Buf.nb!=1)
           {
-            while(j<Buf.NB)
+            while(j<Buf.nb)
             {
                 Buf.tab[j]=Buf.tab[j+1];
                 j++;
             }
           }
-          Buf.NB--;
+          Buf.nb--;
           EcrireDir(S,i,Buf);
           AFF_ENTETE(S,i,ENTETE(S,2)-1);
 
@@ -171,6 +172,43 @@ void fermer(TOF *F){
     F=NULL;
 
 }
+
+
+void Insertion_TOF(TOF *S,int key)
+ {   
+    Tbloc Buf;
+    int i,j,Trouv=faux,Temp,k,Arret=faux;
+     Recherche_DEC_TOF(S,key,&i,&j,&Trouv);
+     if(!Trouv){
+        while((!Arret)&&(i<=ENTETE(S,1)))
+         {
+             LireDir(S,i,&Buf); k=Buf.nb-1;
+             Temp=Buf.Tab[k];
+             while(k>j)
+             {
+                Buf.Tab[k]=Buf.Tab[k-1];
+                 k--;
+
+             }
+             Buf.Tab[j]=key;
+             if (Buf.nb<max)
+             {
+                Buf.nb=Buf.nb+1;Buf.Tab[Buf.nb-1]=Temp;
+                 EcrireDir(S,i,Buf);Arret=vrai;
+             }
+             else{EcrireDir(S,i,Buf);i++;j=0;key=Temp;}
+         }
+         if(i>ENTETE(S,1))
+         {
+             Buf.Tab[0]=key;Buf.nb=1;
+             EcrireDir(S,i,Buf);
+             Aff_ENTETE(S,1,i);
+         }
+     Aff_ENTETE(S,2,ENTETE(S,2)+1);
+     }
+     }
+
+
 
 // une fonction qui affiche les données d'un etudiant 
 void afficherEtudiant(enregistrement e){

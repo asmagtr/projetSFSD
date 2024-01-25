@@ -212,19 +212,14 @@ strcat(newname, ".txt");
  FILE *fTxt=fopen(newname,"w+");
  buffer buf;
  entete tete;
- printf("hello1");
+
  fread(&tete,sizeof(entete),1,fBinaire);// on lit l'entete;
-  printf("hello2");
- printf("\n %d,%d",tete.nbrBlocs,tete.nbrEl);
-  printf("hello3");
+
  for(int i=1;i<=tete.nbrBlocs;i++){
     fseek(fBinaire,(sizeof(entete)+sizeof(bloc)*(i-1)),SEEK_SET);// Positionne le curseur dans le bloc i
     fread(&buf,sizeof(buffer),1,fBinaire);//on lit le bloc num i
-     printf("hello4");
-    afficherBloc(buf);
     for(int j=0;j<buf.nb;j++){
     if(!buf.tab[i].supprimer){
-        printf("%s \t %s\t %s \n",buf.tab[j].matricule, buf.tab[j].nom, buf.tab[j].prenom);
     fprintf(fTxt,"%s \t %s\t %s \n",buf.tab[j].matricule, buf.tab[j].nom, buf.tab[j].prenom);
     }
     }
@@ -234,6 +229,158 @@ strcat(newname, ".txt");
 
  }
 
+// la fonction de suppression logique
+void supprimerLogique(TOF *fichier,char* matricule){
+int i,j;
+bool trouv;
+rechercheDichotomique(*fichier,matricule,&i,&j,&trouv);
+if(trouv){
+    // on vas mettre le bloc dans le buffer
+    buffer buf;
+    LireDir(*fichier,i,&buf);
+    buf.tab[j].supprimer=true;
+    AFF_ENTETE(fichier,3,ENTETE(*fichier,3)+1);// om incremente le nombre d'element supprimés
+    EcrireDir(fichier,i,buf);// on recopie le contenue de buffer dans le bloc de fichier
+}
+}
+// fonction qui cree un fichier
+TOF creer(char* nomFichier , int n){
+    TOF fichier=ouvrir(nomFichier,'n');
+    int nbbloc;
+
+    int i=0,j,k,l;
+    bool trouv,suite=true;
+    enregistrement etudiant;
+    while(i<n && suite){
+        do{
+        printf("inserez les information du %d eme etudiant :\n",i+1);
+        lireEnregistrement(&etudiant);
+
+        rechercheDichotomique(fichier,etudiant.matricule,&j,&k,&trouv);
+
+        if(trouv){
+            printf("cet element existe deja, voulez vous inserer un autre (1 pour oui 0 pour non ):");
+            scanf("%d",&suite);
+            if(!suite){
+
+                break;
+            }
+
+        }
+
+    }while(trouv && suite );
+
+      i++;
+
+    inserer(&fichier,etudiant.matricule,etudiant.nom,etudiant.prenom);
+
+    printf("voulez vous inserer un autre (1 pour oui 0 pour non ):");
+            scanf("%d",&suite);
+}
+   if(i%max==0){
+        nbbloc=i/max;
+    }else{
+        nbbloc=(i/max)+1;
+    }
+    AFF_ENTETE(&fichier,1,nbbloc);
+    AFF_ENTETE(&fichier,2,i);
+    fermer(fichier);
+}
+void lireEnregistrement(enregistrement *etudiant){
+
+    printf("\n entrez le matricule : ");
+    scanf("%s",etudiant->matricule);
+     printf("\n entrez le nom : ");
+    scanf("%s",etudiant->nom);
+     printf("\n entrez le prenom: ");
+    scanf("%s",etudiant->prenom);
+    etudiant->supprimer=false;
+
+}
+
+// Fonction de recherche dichotomique à l'intérieur d'un bloc
+void rechercheDichotomiqueBloc(bloc blocRecherche,char* matricule, int *indice, bool *trouv) {
+    *trouv = false;
+
+    int debut = 0;
+    int fin = blocRecherche.nb - 1;
+
+    while (debut <= fin) {
+        int milieu = (debut + fin) / 2;
+
+        // Comparaison des matricules à l'intérieur du bloc
+        int comparaison = strcmp(blocRecherche.tab[milieu].matricule, matricule);
+
+        if (comparaison == 0) {
+            // Matricule trouvé dans ce bloc
+            *indice = milieu;
+            *trouv = !blocRecherche.tab[milieu].supprimer;
+            return;
+        } else if (comparaison < 0) {
+            // Le matricule recherché est dans la partie droite du bloc
+            debut = milieu + 1;
+        } else {
+            // Le matricule recherché est dans la partie gauche du bloc
+            fin = milieu - 1;
+        }
+    }
+
+    // Matricule non trouvé dans le bloc
+    *indice = debut;
+    *trouv = false;
+    return;
+}
+
+// Fonction de recherche dichotomique sur un fichier
+void rechercheDichotomique(TOF fichier,char* matricule, int *numeroBloc, int *indice, bool *trouv) {
+
+    *trouv = false;
+    buffer buf;
+    bool arret=false;
+
+    int debut = 0;
+    int fin = ENTETE(fichier,1)- 1; /// on recupere l'indice du dernier bloc
+
+    while (debut <= fin && !arret) {
+        int milieu = (debut + fin) / 2; /// on recupere l'indice du bloc milieu
+        LireDir(fichier,milieu+1,&buf); /// on le met dans le buffer
+        int comparaisonDebut = strcmp(matricule,buf.tab[0].matricule);
+        int comparaisonFin = strcmp(matricule,buf.tab[buf.nb - 1].matricule);
+        /***strcmp(A,B)
+           <0  A doit venir avant B
+           =0  A egale á B
+           >0   A viens apres B
+        ****/
+        if (comparaisonDebut >= 0 && comparaisonFin <= 0) {
+            int i;
+            bool existe;
+            rechercheDichotomiqueBloc(buf,matricule,&i,&existe);// on cherche le matricule dans le le buffer qui contient le bloc milieu
+            *indice=i;
+            *trouv=existe;
+            *numeroBloc=milieu+1; // la valeur se retrouve ou doit s'inserer dans le bloc qu'on travail
+            arret=true ;// on arrete la recherche
+            return;
+
+        }else if(comparaisonDebut < 0){/// matricule se positione dans la partie haute
+            fin=milieu-1; // on change le bloc de fin
+        }
+        else{ /// matricule se positionne dans la partie bas
+
+            debut= milieu+1; // on change le bloc de debut
+        }
+
+    }
+     if (debut > fin) {/// verifiée lorsque l'element doit se retrouver avant le premier element on sort de la boucle avec fin=-1 ou doit se retrouver apres le dernieres element on sort de la boucle avec debut=fin+1
+        *numeroBloc = debut+1;
+        *indice=0;
+    }
+    if(fin== ENTETE(fichier,1)-1 && buf.nb<max){// si l'element doit se retrouver apres le dernieres element et on a de place dans le dernier bloc
+        *numeroBloc = fin+1;
+        *indice=buf.nb;
+    }
+
+
+}
 
 
 

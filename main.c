@@ -6,10 +6,11 @@
 ///***************************on declare les types**********************/
 /// notre enregistrement represente un etudiant
 typedef struct enregistremnt{
-    bool supprimer; // pour montrer si l'element est supprimé logiquement 
-    char nom[20]; // le nom sera la clé
+    bool supprimer; // pour montrer si l'element est supprimé logiquement
+    char matricule[20];// le matricule sera la clé
+    char nom[20];
     char prenom[20];
-    int matricule;
+
 }enregistrement;
 /// le type de bloc
 typedef struct bloc{
@@ -21,54 +22,69 @@ typedef struct bloc buffer;// le buffer est de meme type que le bloc
 //le type fichier
 //d'abord on definit l'entete de fichier
 typedef struct entete{
+    char nomFichier[20];
     int nbrBlocs;
     int nbrEl; //nombre d'element (enregistrement)
     int nbrElSupp; // nombre d'enregistrement effacé logiquement
 }entete;
+
 // puis on definit le fichier
 typedef struct TOF{
     entete tete;
-    FILE *f;
+    bloc tab[max];
 }TOF;
-int Alloc_Block(TOF *5)
-{
-    AFF_ENTETE(S,1,ENTETE(S,1)+1);
-    return ENTETE(S,1);
+//les fonctions
+///****************les algorithmes de manipulation des fichiers*********************//////
+/// Ouvrir le fichier logique et l’associer au fichier physique en précisant si le fichier est nouveau ('N') ou ancien ('A').
+TOF ouvrir(char fileName[30],char mode)
+{    TOF fileTOF;
+      if(mode=='a'|| mode=='A'){
+     FILE *f=fopen(fileName,"rb+");// on ouvre le fichier existant en mode lecture/ecriture
+     // on lit l'entete;
+     fread(&(fileTOF.tete),sizeof(entete),1,f);
+     int nb_block=fileTOF.tete.nbrBlocs;
+     for(int i=0;i<nb_block;i++){
+        fread(&(fileTOF.tab[i]),sizeof(bloc),1,f); // on lit le bloc  num i
+     }
+      fclose(f);
+    }else if(mode=='n'|| mode=='N'){
+     FILE *f=fopen(fileName,"wb+");// on cree le fichier
+       (fileTOF.tete).nbrBlocs=(fileTOF.tete).nbrEl=(fileTOF.tete).nbrElSupp=0;/// on initialise le nbr de blocs et d'enregistrement effacées et non effacé á 0
+       strcpy((fileTOF.tete).nomFichier,fileName); // on sauvegarde le nom de fichier dans l'entete
+        fclose(f);
+    }
+
+    return fileTOF;
 }
+void fermer(TOF fileTOF){
 
-
-
-
-//les fonctions 
-
-//fonction pour recuperer les donnees de bloc d'entete
-int ENTETE(TOF *t,int i)
-{
-    if (i==1) return t->tete.nbrBlocs;
-    if (i==2) return t->tete.nbrEl;
-    if (i==3) return t->tete.nbrElSupp;
-    
+    FILE *f=fopen(fileTOF.tete.nomFichier,"wb+");// on ouvre le fichier deja existant
+    // on recopie la tete;
+    fwrite(&(fileTOF.tete),sizeof(entete),1,f);// on update l'entete dans le fichier logique (pour savoir avec quoi nous travaillons plus tard)
+    int nb=fileTOF.tete.nbrBlocs;
+    for(int i=0;i<nb;i++){
+         fwrite(&(fileTOF.tab[i]),sizeof(bloc),1,f);
+    }
+    fclose(f);
+    f=NULL;
 }
-
 //fonction pour affecter des valeurs a l'entete
 void AFF_ENTETE(TOF *t,int i,int val)
 {
-    if (i==1) t->tete.nbrBlocs=val;
-    if (i==2) t->tete.nbrEl=val;
-    if (i==3) t->tete.nbrElSupp=val;
+    if (i==1)  t->tete.nbrBlocs=val;
+    if (i==2)  t->tete.nbrEl=val;
+    if (i==3)  t->tete.nbrElSupp=val;
 }
-
-void LireDir (TOF *t,int i,buffer *buf)
+//fonction pour recuperer les donnees de bloc d'entete
+int ENTETE(TOF t,int i)
 {
-  if (i<=ENTETE(t,1))
-    {
-      fseek(t->f,sizeof(entete)+(i-1)*sizeof(bloc),0);
-      fread(buf,sizeof(bloc),1,t->f);
-      
-    }
-}
+    if (i==1) return t.tete.nbrBlocs;
+    if (i==2) return t.tete.nbrEl;
+    if (i==3) return t.tete.nbrElSupp;
 
-void EcrireDir (TOF *t,int i,buffer buf)
+}
+// une fonvtion qui copie le contenue d'un enregistrement dans un autre
+void copyEnregistrement(enregistrement* destination, const enregistrement source)
 {
       fseek(t->f,sizeof(entete)+(i-1)*sizeof(bloc),0);
       fwrite(&buf,sizeof(bloc),1,t->f);
@@ -125,7 +141,6 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
         *i = deb;
     }
 }
-
 
 void supprimer(TOF *s,enregistrement key)
     {
@@ -211,6 +226,74 @@ void Insertion_TOF(TOF *S,int key)
 
 
 
+// la fonction de suppression logique
+void supprimerLogique(TOF *fichier,char* matricule){
+int i,j;
+bool trouv;
+rechercheDichotomique(*fichier,matricule,&i,&j,&trouv);
+if(trouv){
+    // on vas mettre le bloc dans le buffer
+    buffer buf;
+    LireDir(*fichier,i,&buf);
+    buf.tab[j].supprimer=true;
+    AFF_ENTETE(fichier,3,ENTETE(*fichier,3)+1);// om incremente le nombre d'element supprimés
+    EcrireDir(fichier,i,buf);// on recopie le contenue de buffer dans le bloc de fichier
+}
+}
+// fonction qui cree un fichier
+TOF creer(char* nomFichier , int n){
+    TOF fichier=ouvrir(nomFichier,'n');
+    int nbbloc;
+
+    int i=0,j,k,l;
+    bool trouv,suite=true;
+    enregistrement etudiant;
+    while(i<n && suite){
+        do{
+        printf("inserez les information du %d eme etudiant :\n",i+1);
+        lireEnregistrement(&etudiant);
+    
+        rechercheDichotomique(fichier,etudiant.matricule,&j,&k,&trouv);
+        
+        if(trouv){
+            printf("cet element existe deja, voulez vous inserer un autre (1 pour oui 0 pour non ):");
+            scanf("%d",&suite);
+            if(!suite){
+                      
+                break;
+            }
+
+        }
+
+    }while(trouv && suite );
+   
+      i++;
+
+    inserer(&fichier,etudiant.matricule,etudiant.nom,etudiant.prenom);
+  
+    printf("voulez vous inserer un autre (1 pour oui 0 pour non ):");
+            scanf("%d",&suite);
+}
+   if(i%max==0){
+        nbbloc=i/max;
+    }else{
+        nbbloc=(i/max)+1;
+    }
+    AFF_ENTETE(&fichier,1,nbbloc);
+    AFF_ENTETE(&fichier,2,i);
+    fermer(fichier);
+}
+void lireEnregistrement(enregistrement *etudiant){
+
+    printf("\n entrez le matricule : ");
+    scanf("%s",etudiant->matricule);
+     printf("\n entrez le nom : ");
+    scanf("%s",etudiant->nom);
+     printf("\n entrez le prenom: ");
+    scanf("%s",etudiant->prenom);
+    etudiant->supprimer=false;
+
+}
 // une fonction qui affiche les données d'un etudiant 
 void afficherEtudiant(enregistrement e){
     printf("le nom :%s / le prenom : %s / le matricule : %d \n",e.nom,e.prenom,e.matricule);
@@ -219,5 +302,74 @@ void afficherEtudiant(enregistrement e){
 
 int main(){
 
-    return 0;
+
+    int choix,i,j;
+    bool trouv;
+    char nomFichier[30];
+    char matricule[20];
+    char nom[20];
+    char prenom[20];
+    TOF fichier;
+    printf("vous voulez ?: \n 1/ creer un fichier \n 2/ inserer un etusiant \n 3/ chercher un etudiant \n 4/ supprimer un etudiant \n selectionnez un chiffre entre 1 et 4 :");
+    scanf("%d",&choix);
+        switch (choix) {
+        case 1:
+            printf("\n entrez le nom de fichier vous souhaitez creer :");
+            scanf("%s",nomFichier);
+            printf("\n combien d'etudiant vous voulez inserer");
+            scanf("%d",&i);
+            creer(nomFichier,i);
+            break;
+
+        case 2:
+             fichier=ouvrir("listeEtudiants", 'a');// on ouvre le fichier existant deja
+            printf("You selected Option 2.\n");
+            printf("\n entrez le matricule de l'etudiant :");
+
+            scanf("%s",matricule);
+            printf("\n entrez le nom de l'etudiant :");
+
+            scanf("%s",nom);
+            printf("\n entrez le prenom de l'etudiant :");
+
+            scanf("%s",prenom);
+            inserer(&fichier,matricule,nom,prenom);
+
+            fermer(fichier);
+            break;
+
+        case 3:
+            printf("You selected Option 3.\n");
+            fichier=ouvrir("listeEtudiants",'a');// on ouvre le fichier existant deja
+            printf("\n entrez le matricule de l'etudiant :");
+
+            scanf("%s",matricule);
+            rechercheDichotomique(fichier,matricule,&i,&j,&trouv);
+            if(trouv){
+                printf("l'etudiant avec le matricule %s est dans le bloc num %d á la case avec l'indice %d",matricule,i,j);
+            }
+            else{
+                 printf("l'etudiant avec le matricule %s n'existe pas",matricule);
+            }
+            fermer(fichier);
+            break;
+        case 4:
+             printf("You selected Option 4.\n");
+            fichier=ouvrir("listeEtudiants",'a');// on ouvre le fichier existant deja
+            printf("\n entrez le matricule de l'etudiant :");
+            scanf("%s",matricule);
+            rechercheDichotomique(fichier,matricule,&i,&j,&trouv);
+            if(trouv){
+                printf("l'element avec le matricule %s est supprimé",matricule);
+            }else{
+                 printf("l'element avec le matricule %s n'existe pas",matricule);
+            }
+            fermer(fichier);
+            break;
+
+        default:
+            printf("Invalid choice. Please enter a number between 1 and 4.\n");
+    }
+
+ return 0;
 }

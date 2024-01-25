@@ -197,8 +197,6 @@ void inserer(TOF *fichier,char* matricule,char* nom, char* prenom){
             EcrireDir(fichier,i,buf); // on copie le contenue de buffer dans le bloc q'on a ajoute
         }
 
-
-
          AFF_ENTETE(fichier,2,ENTETE(*fichier,2)+1);// on incremente le nombre d'element
 
 
@@ -214,10 +212,15 @@ strcat(newname, ".txt");
  FILE *fTxt=fopen(newname,"w+");
  buffer buf;
  entete tete;
+ printf("hello1");
  fread(&tete,sizeof(entete),1,fBinaire);// on lit l'entete;
+  printf("hello2");
  printf("\n %d,%d",tete.nbrBlocs,tete.nbrEl);
+  printf("hello3");
  for(int i=1;i<=tete.nbrBlocs;i++){
+    fseek(fBinaire,(sizeof(entete)+sizeof(bloc)*(i-1)),SEEK_SET);// Positionne le curseur dans le bloc i
     fread(&buf,sizeof(buffer),1,fBinaire);//on lit le bloc num i
+     printf("hello4");
     afficherBloc(buf);
     for(int j=0;j<buf.nb;j++){
     if(!buf.tab[i].supprimer){
@@ -306,6 +309,7 @@ int main(){
         default:
             printf("Invalid choice. Please enter a number between 1 and 4.\n");
     }
+    fichierBinaireVersTxt("listeEtudiants");
 
  return 0;
 }

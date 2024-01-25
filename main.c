@@ -126,6 +126,83 @@ void Recherche_DEC_TOF(TOF *t, char *cle, int *i, int *j, bool *Trouv) {
     }
 }
 
+
+// la fonction de suppression logique
+void supprimerLogique(TOF *fichier,char* matricule){
+int i,j;
+bool trouv;
+rechercheDichotomique(*fichier,matricule,&i,&j,&trouv);
+if(trouv){
+    // on vas mettre le bloc dans le buffer
+    buffer buf;
+    LireDir(*fichier,i,&buf);
+    buf.tab[j].supprimer=true;
+    AFF_ENTETE(fichier,3,ENTETE(*fichier,3)+1);// om incremente le nombre d'element supprimés
+    EcrireDir(fichier,i,buf);                  // on recopie le contenue de buffer dans le bloc de fichier
+}
+}
+
+
+// fonction qui cree un fichier
+TOF creer(char* nomFichier , int n){
+    TOF fichier=ouvrir(nomFichier,'n');
+    int nbbloc;
+    int i=0,j,k,l;
+    bool trouv,suite=true;
+    enregistrement etudiant;
+    while(i<n && suite){
+        do{
+            printf("inserez les information du %d eme etudiant :\n",i+1);
+        lireEnregistrement(&etudiant);
+        rechercheDichotomique(fichier,etudiant.matricule,&j,&k,&trouv);
+        if(trouv){
+            printf("cet element existe deja, voulez vous inserer un autre (1 pour oui 0 pour non ):");
+            scanf("%d",&suite);
+            if(!suite){
+                      
+                break;
+            }
+        }
+        }while(trouv && suite );
+   
+      i++;
+
+    inserer(&fichier,etudiant.matricule,etudiant.nom,etudiant.prenom);
+  
+    printf("voulez vous inserer un autre (1 pour oui 0 pour non ):");
+            scanf("%d",&suite);
+}
+    if(i%max==0){
+          nbbloc=i/max;
+     }else{
+          nbbloc=(i/max)+1;
+     }
+     AFF_ENTETE(&fichier,1,nbbloc);
+     AFF_ENTETE(&fichier,2,i);
+     fermer(fichier);
+}
+
+void lireEnregistrement(enregistrement *etudiant){
+
+    printf("\n entrez le matricule : ");
+    scanf("%s",etudiant->matricule);
+     printf("\n entrez le nom : ");
+    scanf("%s",etudiant->nom);
+     printf("\n entrez le prenom: ");
+    scanf("%s",etudiant->prenom);
+    etudiant->supprimer=false;
+
+}
+
+
+
+
+
+
+
+
+
+
 void supprimer(TOF *s,enregistrement key)
     {
        int i,j,Trouv;
